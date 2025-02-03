@@ -1,0 +1,24 @@
+# Ignore all files in the mitdb directory
+mitdb/*
+
+# Ignore any large datasets
+*.dat
+*.hea
+*.atr
+
+# Ignore any compressed files (if downloading the dataset)
+*.zip
+*.tar.gz
+*.7z
+
+# Ignore Python cache and temporary files
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore Jupyter Notebook checkpoints (if using notebooks)
+.ipynb_checkpoints/
+
+# Ignore log files and temporary outputs
+*.log
+*.tmp
