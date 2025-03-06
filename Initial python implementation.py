@@ -59,7 +59,7 @@ def print_record_metrics(record_name, results):
     print()
 
 # -------------------------------
-# Helper: Scatter Plot Function for CR vs. PRD and Dynamic Power
+# Helper: Scatter Plot for CR vs. PRD and Dynamic Power
 # -------------------------------
 def plot_scatter_cr_vs_prd_and_power(overall_results, power_key="time"):
     """
@@ -76,13 +76,13 @@ def plot_scatter_cr_vs_prd_and_power(overall_results, power_key="time"):
     ax1 = axes[0]
     ax2 = axes[1]
     
-    ax1.set_title("Compression Ratio vs. PRD")
-    ax1.set_xlabel("Compression Ratio (CR)")
-    ax1.set_ylabel("PRD (%)")
+    ax1.set_title("Compression Ratio vs. PRD", fontsize=10)
+    ax1.set_xlabel("Compression Ratio (CR)", fontsize=10)
+    ax1.set_ylabel("PRD (%)", fontsize=10)
     
-    ax2.set_title("Compression Ratio vs. Dynamic Power")
-    ax2.set_xlabel("Compression Ratio (CR)")
-    ax2.set_ylabel(f"{power_key} (units)")
+    ax2.set_title("Compression Ratio vs. Dynamic Power", fontsize=10)
+    ax2.set_xlabel("Compression Ratio (CR)", fontsize=10)
+    ax2.set_ylabel(f"{power_key} (units)", fontsize=10)
     
     markers = ["o", "s", "^", "D", "x", "p"]
     colors  = ["blue", "red", "green", "purple", "orange", "brown"]
@@ -105,15 +105,15 @@ def plot_scatter_cr_vs_prd_and_power(overall_results, power_key="time"):
                     label=method)
     
     handles1, labels1 = ax1.get_legend_handles_labels()
-    ax1.legend(handles1, labels1, loc="best")
+    ax1.legend(handles1, labels1, loc="best", fontsize=8)
     handles2, labels2 = ax2.get_legend_handles_labels()
-    ax2.legend(handles2, labels2, loc="best")
+    ax2.legend(handles2, labels2, loc="best", fontsize=8)
     
     plt.tight_layout()
     plt.show()
 
 # -------------------------------
-# 1. Data Loading Function
+# Data Loading Function
 # -------------------------------
 def load_ecg_data(record_name='100', path='./mit-bih-arrhythmia-database-1.0.0/'):
     """
@@ -134,7 +134,7 @@ def load_ecg_data(record_name='100', path='./mit-bih-arrhythmia-database-1.0.0/'
     return signals
 
 # -------------------------------
-# 2. L2SB Compression and Decompression Functions
+# L2SB Compression/Decompression Functions
 # -------------------------------
 def l2sb_compress(signal, thresholds, quant_steps):
     """
@@ -142,11 +142,11 @@ def l2sb_compress(signal, thresholds, quant_steps):
     
     Parameters:
       signal (numpy.ndarray): 1D array of ECG samples.
-      thresholds (list): List of two increasing threshold values [t1, t2].
-      quant_steps (list): List of quantisation step sizes for each sub-band.
+      thresholds (list): Two increasing threshold values [t1, t2].
+      quant_steps (list): Quantisation step sizes for each sub-band.
       
     Returns:
-      list: List of tuples (subband, q_value, sign) for each sample.
+      list: Tuples (subband, q_value, sign) for each sample.
     """
     encoded = []
     for x in signal:
@@ -171,9 +171,9 @@ def l2sb_decompress(encoded, thresholds, quant_steps):
     Decompress the encoded data produced by l2sb_compress.
     
     Parameters:
-      encoded (list): List of tuples (subband, q_value, sign).
-      thresholds (list): List of two threshold values [t1, t2].
-      quant_steps (list): List of quantisation step sizes for each sub-band.
+      encoded (list): Tuples (subband, q_value, sign).
+      thresholds (list): Two threshold values [t1, t2].
+      quant_steps (list): Quantisation step sizes for each sub-band.
       
     Returns:
       numpy.ndarray: Reconstructed ECG signal.
@@ -192,13 +192,13 @@ def l2sb_decompress(encoded, thresholds, quant_steps):
     return np.array(rec)
 
 # -------------------------------
-# 3. Metrics Functions
+# Metrics Functions: PRD, Compression Ratio, and WDD
 # -------------------------------
 def compute_prd(original, reconstructed):
     """
     Compute the Percentage Root-Mean-Square Difference (PRD) between the original and reconstructed signals.
     
-    PRD = sqrt(sum((x - x_rec)^2)/sum(x^2)) * 100
+    PRD = sqrt(sum((x - x_rec)^2) / sum(x^2)) * 100
     
     Parameters:
       original (numpy.ndarray): Original ECG signal.
@@ -215,17 +215,10 @@ def compute_compression_ratio(encoded, num_samples, bit_depth=16):
     """
     Estimate the compression ratio (CR) given the encoded signal.
     
-    Assumes the original signal uses 'bit_depth' bits per sample.
-    For each encoded sample:
-      - 2 bits for subband index.
-      - A variable number of bits for the quantized value.
-    
-    CR = (total bits in original signal) / (total bits in compressed signal)
-    
     Parameters:
       encoded (list): List of encoded tuples.
       num_samples (int): Number of samples in the original signal.
-      bit_depth (int): Bit-depth of original signal.
+      bit_depth (int): Bit-depth of the original signal.
       
     Returns:
       float: Compression ratio.
@@ -241,22 +234,20 @@ def compute_compression_ratio(encoded, num_samples, bit_depth=16):
 
 def compute_wdd(original, reconstructed, threshold_factor=0.5):
     """
-    Compute the Weighted Diagnostic Distortion (WDD) between original and reconstructed signals.
+    Compute the Weighted Diagnostic Distortion (WDD) between the original and reconstructed signals.
     
-    A simple approach: assign weight=2 if abs(x) > threshold_factor * max(abs(original)), else weight=1.
-    Then,
-      WDD = sqrt(sum(w*(x-x_rec)^2) / sum(w*x^2)) * 100
-      
+    WDD = sqrt(sum(w*(x - x_rec)^2) / sum(w*(x^2))) * 100, where weight w = 2 if abs(x) exceeds threshold_factor * max(abs(original)), else 1.
+    
     Parameters:
       original (numpy.ndarray): Original ECG signal.
       reconstructed (numpy.ndarray): Reconstructed ECG signal.
-      threshold_factor (float): Fraction of max amplitude to decide high weight.
+      threshold_factor (float): Fraction of max amplitude for high weight.
       
     Returns:
       float: WDD in percentage.
     """
     orig = np.array(original)
-    rec  = np.array(reconstructed)
+    rec = np.array(reconstructed)
     max_val = np.max(np.abs(orig))
     weights = np.where(np.abs(orig) > threshold_factor * max_val, 2.0, 1.0)
     num = np.sum(weights * (orig - rec)**2)
@@ -265,7 +256,7 @@ def compute_wdd(original, reconstructed, threshold_factor=0.5):
     return wdd
 
 # -------------------------------
-# 4. Huffman Compression Functions
+# Huffman Compression Functions
 # -------------------------------
 Node = namedtuple("Node", ["freq", "symbol", "left", "right"])
 
@@ -277,7 +268,7 @@ def huffman_tree(symbols_freq):
       symbols_freq (dict): Dictionary mapping symbols to frequencies.
       
     Returns:
-      Node: Root of the Huffman tree.
+      Node: Root node of the Huffman tree.
     """
     heap = []
     for sym, freq in symbols_freq.items():
@@ -291,7 +282,7 @@ def huffman_tree(symbols_freq):
 
 def huffman_code_lengths(root, prefix=""):
     """
-    Recursively determine code lengths for each symbol in a Huffman tree.
+    Recursively determine code lengths for each symbol in the Huffman tree.
     
     Parameters:
       root (Node): Root of the Huffman tree.
@@ -313,7 +304,7 @@ def huffman_compression_bits(signal):
     Estimate the average number of bits per symbol using Huffman coding.
     
     Parameters:
-      signal (numpy.ndarray): Original ECG signal (quantized).
+      signal (numpy.ndarray): Original ECG signal (quantized to integers).
       
     Returns:
       float: Average bits per symbol.
@@ -343,13 +334,11 @@ def compute_huffman_cr(signal, bit_depth=16):
     return cr
 
 # -------------------------------
-# 5. Genetic Algorithm for Adaptive L2SB (Improved)
+# Genetic Algorithm for Adaptive L2SB (Improved)
 # -------------------------------
 def evaluate_individual(ind, signal, quant_steps, prd_limit):
     """
-    Evaluate an individual [t1, t2] for L2SB thresholds.
-    
-    Adaptive penalty: if PRD > prd_limit, fitness = CR * (prd_limit / PRD); else, fitness = CR.
+    Evaluate an individual [t1, t2] for L2SB thresholds with an adaptive PRD penalty.
     
     Parameters:
       ind (list): Candidate thresholds [t1, t2].
@@ -358,7 +347,7 @@ def evaluate_individual(ind, signal, quant_steps, prd_limit):
       prd_limit (float): Maximum acceptable PRD.
       
     Returns:
-      float: Fitness value.
+      float: Fitness value (CR adjusted for PRD).
     """
     t1, t2 = ind
     if t2 <= t1:
@@ -375,16 +364,20 @@ def evaluate_individual(ind, signal, quant_steps, prd_limit):
 
 def ga_optimize_l2sb(signal, quant_steps, prd_limit=5.0, pop_size=20, generations=30):
     """
-    Optimize L2SB thresholds using a Genetic Algorithm.
+    Optimize L2SB thresholds using a Genetic Algorithm with various improvements.
     
-    Improvements: Parallelized fitness evaluation, adaptive PRD penalty, roulette wheel selection,
-    Gaussian noise mutation, and surrogate ML model filtering.
-    
+    Improvements:
+      - Parallel fitness evaluation using joblib.
+      - Adaptive PRD penalty.
+      - Roulette wheel selection.
+      - Gaussian noise mutation.
+      - Surrogate ML model filtering.
+      
     Parameters:
       signal (numpy.ndarray): Original ECG signal.
       quant_steps (list): Quantisation step sizes.
       prd_limit (float): Maximum acceptable PRD.
-      pop_size (int): GA population size.
+      pop_size (int): Population size.
       generations (int): Number of generations.
       
     Returns:
@@ -472,7 +465,7 @@ def ga_optimize_l2sb(signal, quant_steps, prd_limit=5.0, pop_size=20, generation
     return {"thresholds": best_thresholds, "CR": best_cr, "PRD": best_prd}
 
 # -------------------------------
-# 6. Deep Learning Autoencoder Functions
+# Deep Learning Autoencoder Functions
 # -------------------------------
 def segment_signal(signal, frame_length):
     """
@@ -491,7 +484,7 @@ def segment_signal(signal, frame_length):
 
 def build_autoencoder(input_dim, latent_dim):
     """
-    Build a simple dense autoencoder for ECG compression.
+    Build a simple dense autoencoder model for ECG compression.
     
     Parameters:
       input_dim (int): Input dimension (frame length).
@@ -515,7 +508,7 @@ def train_autoencoder(segments, latent_dim, epochs=50, batch_size=32):
     """
     Train the autoencoder on segmented ECG data.
     
-    Note: Use smaller epochs (e.g., 5-10) for quick tests, larger (50+) for full runs.
+    Note: For quick tests, use fewer epochs (e.g., 5-10); for full runs, use 50+.
     
     Parameters:
       segments (numpy.ndarray): 2D array of ECG segments.
@@ -551,7 +544,7 @@ def evaluate_autoencoder(autoencoder, segments, latent_dim):
     return avg_prd, cr
 
 # -------------------------------
-# 7. Evaluate a Single Record
+# Evaluate a Single Record
 # -------------------------------
 def evaluate_record(record_name, path, run_original, run_ga, run_auto, run_huff,
                     ga_generations, auto_epochs, pop_size, quant_steps, frame_length=256, prd_limit=5.0):
@@ -565,8 +558,8 @@ def evaluate_record(record_name, path, run_original, run_ga, run_auto, run_huff,
       run_ga (bool): Run GA L2SB.
       run_auto (bool): Run Autoencoder.
       run_huff (bool): Run Huffman.
-      ga_generations (int): GA generations.
-      auto_epochs (int): Autoencoder epochs.
+      ga_generations (int): Number of GA generations.
+      auto_epochs (int): Number of autoencoder epochs.
       pop_size (int): GA population size.
       quant_steps (list): Quantisation steps.
       frame_length (int): Segment length for autoencoder.
@@ -639,14 +632,14 @@ def evaluate_record(record_name, path, run_original, run_ga, run_auto, run_huff,
     return results
 
 # -------------------------------
-# 8. Plotting Helper: Plot a Metric for Each Method
+# Plotting Helper: Boxplot, Violin, Histogram
 # -------------------------------
 def plot_metric(overall_results, metric_key, title, ylabel, convert_func=None):
     """
-    Plot the distribution of a metric across methods using Boxplot, Violin plot, and Histogram + Gaussian fit.
+    Plot a metric across methods using a Boxplot, Violin Plot, and Histogram with Gaussian Fit.
     
     Parameters:
-      overall_results (dict): Dictionary with keys as method names and values as metric lists.
+      overall_results (dict): Dictionary with keys as method names and metric lists as values.
       metric_key (str): Metric key (e.g., 'CR', 'PRD', 'WDD', 'time', 'mem').
       title (str): Plot title.
       ylabel (str): Y-axis label.
@@ -663,15 +656,15 @@ def plot_metric(overall_results, metric_key, title, ylabel, convert_func=None):
     fig, axes = plt.subplots(1, 3, figsize=(16, 5))
     
     axes[0].boxplot(data, labels=methods, patch_artist=True)
-    axes[0].set_title(f"{title} - Boxplot")
-    axes[0].set_ylabel(ylabel)
+    axes[0].set_title(f"{title} - Boxplot", fontsize=10)
+    axes[0].set_ylabel(ylabel, fontsize=10)
     axes[0].grid(alpha=0.3)
     
     axes[1].violinplot(data, showmeans=True, showextrema=True)
-    axes[1].set_title(f"{title} - Violin Plot")
+    axes[1].set_title(f"{title} - Violin Plot", fontsize=10)
     axes[1].set_xticks(np.arange(1, len(methods)+1))
-    axes[1].set_xticklabels(methods)
-    axes[1].set_ylabel(ylabel)
+    axes[1].set_xticklabels(methods, fontsize=8)
+    axes[1].set_ylabel(ylabel, fontsize=10)
     axes[1].grid(alpha=0.3)
     
     for i, method in enumerate(methods):
@@ -680,39 +673,39 @@ def plot_metric(overall_results, metric_key, title, ylabel, convert_func=None):
         n, bins, patches = axes[2].hist(data[i], bins=bins, alpha=0.3, density=True, label=method)
         y_fit = norm.pdf(bins, mu, sigma)
         axes[2].plot(bins, y_fit, '--', linewidth=2)
-    axes[2].set_title(f"{title} - Histogram + Gaussian Fit")
-    axes[2].set_xlabel(ylabel)
-    axes[2].legend(methods)
+    axes[2].set_title(f"{title} - Histogram + Gaussian Fit", fontsize=10)
+    axes[2].set_xlabel(ylabel, fontsize=10)
+    axes[2].legend(methods, fontsize=8)
     
-    plt.suptitle(title)
+    plt.suptitle(title, fontsize=12)
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.show()
 
 # -------------------------------
-# 9. Main Scatter Plot: CR vs. PRD and CR vs. Dynamic Power
+# Plot Scatter: CR vs. PRD and CR vs. Dynamic Power
 # -------------------------------
 def plot_scatter_cr_vs_prd_and_power(overall_results, power_key="time"):
     """
     Create two scatter plots:
-      1) Compression Ratio vs. PRD
-      2) Compression Ratio vs. Dynamic Power (using the specified power_key)
+      1) Compression Ratio vs. PRD.
+      2) Compression Ratio vs. Dynamic Power (using the specified power_key).
     
     Parameters:
       overall_results (dict): Dictionary with methods as keys and metric lists as values.
-      power_key (str): Metric key for dynamic power (default "time").
+      power_key (str): Key for dynamic power (e.g., "time" or "mem").
     """
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
     
     ax1 = axes[0]
     ax2 = axes[1]
     
-    ax1.set_title("Compression Ratio vs. PRD")
-    ax1.set_xlabel("Compression Ratio (CR)")
-    ax1.set_ylabel("PRD (%)")
+    ax1.set_title("Compression Ratio vs. PRD", fontsize=10)
+    ax1.set_xlabel("Compression Ratio (CR)", fontsize=10)
+    ax1.set_ylabel("PRD (%)", fontsize=10)
     
-    ax2.set_title("Compression Ratio vs. Dynamic Power")
-    ax2.set_xlabel("Compression Ratio (CR)")
-    ax2.set_ylabel(f"{power_key} (units)")
+    ax2.set_title("Compression Ratio vs. Dynamic Power", fontsize=10)
+    ax2.set_xlabel("Compression Ratio (CR)", fontsize=10)
+    ax2.set_ylabel(f"{power_key} (units)", fontsize=10)
     
     markers = ["o", "s", "^", "D", "x", "p"]
     colors  = ["blue", "red", "green", "purple", "orange", "brown"]
@@ -735,15 +728,15 @@ def plot_scatter_cr_vs_prd_and_power(overall_results, power_key="time"):
                     label=method)
     
     handles1, labels1 = ax1.get_legend_handles_labels()
-    ax1.legend(handles1, labels1, loc="best")
+    ax1.legend(handles1, labels1, loc="best", fontsize=8)
     handles2, labels2 = ax2.get_legend_handles_labels()
-    ax2.legend(handles2, labels2, loc="best")
+    ax2.legend(handles2, labels2, loc="best", fontsize=8)
     
     plt.tight_layout()
     plt.show()
 
 # -------------------------------
-# 10. Main Function
+# Main Function
 # -------------------------------
 def main():
     print("Select which compression methods to run:")
@@ -766,7 +759,8 @@ def main():
         print("No methods selected. Exiting.")
         return
     
-    # Define record IDs based on specified ranges
+    # Define record IDs based on specified ranges:
+    # 100-109, 111-119, 121-124, 200-203, 205, 207-210, 212-215, 217, 219-223, 228, 230-234
     record_ids = list(range(100, 110)) + list(range(111, 120)) + list(range(121, 125)) \
                  + list(range(200, 204)) + [205] + list(range(207, 211)) + list(range(212, 216)) \
                  + [217] + list(range(219, 224)) + [228] + list(range(230, 235))
@@ -809,7 +803,6 @@ def main():
         print("No valid records processed. Exiting.")
         return
     
-    # Filter out methods with no data
     overall_results = {k: v for k, v in overall_results.items() if len(v['CR']) > 0}
     
     print("\n=== Overall Metrics Statistics ===")
@@ -833,10 +826,10 @@ def main():
     plot_metric(overall_results, 'time', "Run Time Across Methods", "Time (seconds)")
     plot_metric(overall_results, 'mem',  "Memory Usage Across Methods", "Memory (MB)", convert_func=mem_convert)
     
-    # New scatter plots: CR vs. PRD and CR vs. dynamic power (using 'time' by default)
+    # New scatter plots: CR vs. PRD and CR vs. dynamic power (using 'time' as proxy)
     plot_scatter_cr_vs_prd_and_power(overall_results, power_key="time")
-    # To use memory as dynamic power, uncomment below:
-    # plot_scatter_cr_vs_prd_and_power(overall_results, power_key="mem")
+    # Optionally, to use memory as proxy:
+    plot_scatter_cr_vs_prd_and_power(overall_results, power_key="mem")
 
 if __name__ == "__main__":
     main()
